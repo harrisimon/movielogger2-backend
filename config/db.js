@@ -10,6 +10,7 @@ const database = {
 	test: `mongodb://localhost/${mongooseBaseName}-test`,
 }
 
+
 // Identify if development environment is test or development
 // select DB based on whether a test file was executed before `server.js`
 const localDb = process.env.TESTENV ? database.test : database.development

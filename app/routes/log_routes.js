@@ -34,11 +34,9 @@ const router = express.Router()
 // index ALL
 router.get("/reviews", (req, res, next) => {
 	Log.find()
-		.populate("author", "username")
+		.populate("author", "email")
 		.then((log) => {
             
-			// const username = req.session.username
-			// const loggedIn = req.session.loggedIn
             return log.map((log) => log.toObject())
 			
 		})
@@ -49,19 +47,19 @@ router.get("/reviews", (req, res, next) => {
 })
 
 // index that shows only the user's logs
-router.get("/mine", (req, res) => {
-	// destructure user info from req.session
-	const { username, userId, loggedIn } = req.session
+router.get("/mine", requireToken, (req, res, next) => {
 
-	Log.find({ author: userId })
-		.populate("author", "username")
+    const author = req.user._id
+	Log.find({author:ObjectId(`${ author}`)})
+		.populate("author", "email")
+        .then(handle404)
+        .then((log) => {
+            return log.map((log) => log.toObject())
+        })
 		.then((logs) => {
-			// res.render("logs/index", { logs, username, loggedIn })
-            res.sendStatus(201).json({log:log.toObject()})
-		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
-		})
+            res.status(200).json({logs:logs})
+        })
+		.catch(next)
 })
 
 

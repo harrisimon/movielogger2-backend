@@ -28,6 +28,7 @@ const clientDevPort = 3000
 // establish database connection
 // use new version of URL parser
 // use createIndex instead of deprecated ensureIndex
+mongoose.set("strictQuery", false);
 mongoose.connect(db, {
 	useNewUrlParser: true,
 })

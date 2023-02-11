@@ -33,7 +33,7 @@ const LogSchema = new mongoose.Schema({
     },
     plot: {
         type:String,
-        required: true
+        required: false
     },
     genre: {
         type:String,
