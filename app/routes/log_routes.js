@@ -4,6 +4,7 @@ const passport = require("passport")
 const User = require("../models/user")
 const Log = require("../models/log")
 const customErrors = require("../../lib/custom_errors")
+const removeBlanks = require('../../lib/remove_blank_fields')
 const handle404 = customErrors.handle404
 const { ObjectId } = require("mongodb")
 const requireToken = passport.authenticate("bearer", { session: false })
@@ -31,19 +32,20 @@ const router = express.Router()
 // Routes
 
 // index ALL
-router.get("/reviews", (req, res) => {
-	Log.find({})
+router.get("/reviews", (req, res, next) => {
+	Log.find()
 		.populate("author", "username")
 		.then((log) => {
-			const username = req.session.username
-			const loggedIn = req.session.loggedIn
-			return log.map((log) => log.toObject())
-
-			// res.render('logs/index', { logs, username, loggedIn })
+            
+			// const username = req.session.username
+			// const loggedIn = req.session.loggedIn
+            return log.map((log) => log.toObject())
+			
 		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
-		})
+        .then((log) => {
+            res.status(200).json({log:log})
+        })
+		.catch(next)
 })
 
 // index that shows only the user's logs
@@ -54,21 +56,18 @@ router.get("/mine", (req, res) => {
 	Log.find({ author: userId })
 		.populate("author", "username")
 		.then((logs) => {
-			res.render("logs/index", { logs, username, loggedIn })
+			// res.render("logs/index", { logs, username, loggedIn })
+            res.sendStatus(201).json({log:log.toObject()})
 		})
 		.catch((error) => {
 			res.redirect(`/error?error=${error}`)
 		})
 })
 
-// new route -> GET route that renders our page with the form
-router.get("/new", (req, res) => {
-	const { username, userId, loggedIn } = req.session
-	res.render("logs/new", { username, loggedIn })
-})
 
-router.post("/reviews", (req, res, next) => {
-
+router.post("/reviews", requireToken, removeBlanks, (req, res, next) => {
+    req.body.review.author = req.user._id
+    console.log("user",req.user)
 	Log.create(req.body.review)
 		.then(handle404)
 		.then((log) => {
