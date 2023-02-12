@@ -107,15 +107,16 @@ router.get("/reviews/:id", (req, res, next) => {
 })
 
 // delete route
-router.delete("/reviews/:id", (req, res) => {
+router.delete("/reviews/:id", requireToken, (req, res, next) => {
 	const logId = req.params.id
-	Log.findByIdAndRemove(logId)
-		.then((log) => {
-			res.redirect("/logs/mine")
-		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
-		})
+	Log.findById(logId)
+        .then(handle404)
+        .then((log) => {
+            requireOwnership(req, log)
+            log.deleteOne()
+        })
+		.then(()=> res.sendStatus(204))
+		.catch(next)
 })
 
 // Export the Router
