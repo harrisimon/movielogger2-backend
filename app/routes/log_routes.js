@@ -13,23 +13,6 @@ const requireToken = passport.authenticate("bearer", { session: false })
 // Create router
 const router = express.Router()
 
-// Router Middleware
-// Authorization middleware
-// If you have some resources that should be accessible to everyone regardless of loggedIn status, this middleware can be moved, commented out, or deleted.
-///////////////////////////////////
-/// decide on whether to use this
-////////////////////////////////
-// router.use((req, res, next) => {
-// 	// checking the loggedIn boolean of our session
-// 	if (req.session.loggedIn) {
-// 		// if they're logged in, go to the next thing(thats the controller)
-// 		next()
-// 	} else {
-// 		// if they're not logged in, send them to the login page
-// 		res.redirect('/auth/login')
-// 	}
-// })
-
 // Routes
 
 // index ALL
@@ -62,7 +45,7 @@ router.get("/mine", requireToken, (req, res, next) => {
 
 router.post("/reviews", requireToken, removeBlanks, (req, res, next) => {
 	req.body.review.author = req.user._id
-	console.log("user", req.user)
+	// console.log("user", req.user)
 	Log.create(req.body.review)
 		.then(handle404)
 		.then((log) => {
@@ -70,7 +53,6 @@ router.post("/reviews", requireToken, removeBlanks, (req, res, next) => {
 		})
 		.catch(next)
 })
-
 
 // update route
 router.put("/reviews/:id", requireToken, (req, res, next) => {
@@ -81,9 +63,6 @@ router.put("/reviews/:id", requireToken, (req, res, next) => {
             requireOwnership(req, log)
 			return log.updateOne(req.body)
 		})
-		// .then((log) => {
-		// 	return log.toObject()
-		// })
 		.then((log) => {
 			res.status(204).json({ log: log })
 		})
