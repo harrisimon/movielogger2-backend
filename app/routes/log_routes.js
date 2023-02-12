@@ -4,7 +4,8 @@ const passport = require("passport")
 const User = require("../models/user")
 const Log = require("../models/log")
 const customErrors = require("../../lib/custom_errors")
-const removeBlanks = require('../../lib/remove_blank_fields')
+const removeBlanks = require("../../lib/remove_blank_fields")
+const requireOwnership = customErrors.requireOwnership
 const handle404 = customErrors.handle404
 const { ObjectId } = require("mongodb")
 const requireToken = passport.authenticate("bearer", { session: false })
@@ -36,141 +37,77 @@ router.get("/reviews", (req, res, next) => {
 	Log.find()
 		.populate("author", "email")
 		.then((log) => {
-            
-            return log.map((log) => log.toObject())
-			
+			return log.map((log) => log.toObject())
 		})
-        .then((log) => {
-            res.status(200).json({log:log})
-        })
+		.then((log) => {
+			res.status(200).json({ log: log })
+		})
 		.catch(next)
 })
 
 // index that shows only the user's logs
 router.get("/mine", requireToken, (req, res, next) => {
-
-    const author = req.user._id
-	Log.find({author:ObjectId(`${ author}`)})
+	const author = req.user._id
+	Log.find({ author: ObjectId(`${author}`) })
 		.populate("author", "email")
-        .then(handle404)
-        .then((log) => {
-            return log.map((log) => log.toObject())
-        })
+		.then(handle404)
+		.then((log) => {
+			return log.map((log) => log.toObject())
+		})
 		.then((logs) => {
-            res.status(200).json({logs:logs})
-        })
+			res.status(200).json({ logs: logs })
+		})
 		.catch(next)
 })
 
-
 router.post("/reviews", requireToken, removeBlanks, (req, res, next) => {
-    req.body.review.author = req.user._id
-    console.log("user",req.user)
+	req.body.review.author = req.user._id
+	console.log("user", req.user)
 	Log.create(req.body.review)
 		.then(handle404)
 		.then((log) => {
 			res.status(201).json({ log: log.toObject() })
 		})
 		.catch(next)
-	// how to deal with API key??
-
-	// axios(`http://www.omdbapi.com/?apikey=${process.env.API_KEY}4&t=${searchTitle}&plot=full`)
-	// .then(result => {
-
-	// 		const movieTitle = result.data.Title
-	// 		const movieYear = result.data.Year
-	// 		const movieRuntime = result.data.Runtime
-	// 		const movieDirector = result.data.Director
-	// 		const moviePlot = result.data.Plot
-	// 		const movieGenre = result.data.Genre
-	// 		const movieImdbId = result.data.imdbID
-	// 		const moviePoster = result.data.Poster
-	// 		console.log(result.data.response)
-	// 		const movie = {
-	// 			title: movieTitle,
-	// 			year: movieYear,
-	// 			runtime: movieRuntime,
-	// 			director: movieDirector,
-	// 			plot: moviePlot,
-	// 			genre: movieGenre,
-	// 			imdbId: movieImdbId,
-	// 			poster: moviePoster,
-
-	// 		}
-	// res.render('logs/new', {movie: movie, username, loggedIn})
-
-	// })
 })
 
-// create -> POST route that actually calls the db and makes a new document
-// post the log with the comment
-// router.post('/', (req, res) => {
-
-// 	req.body.author = req.session.userId
-
-// 	console.log("here",req.body)
-// 	Log.create(req.body)
-// 		.then(log => {
-// 			res.redirect('/logs')
-// 		})
-// 		.catch(error => {
-// 			res.redirect(`/error?error=${error}`)
-// 		})
-// })
-
-// edit route -> GET that takes us to the edit form view
-router.get("/:id/edit", (req, res) => {
-	const username = req.session.username
-	const loggedIn = req.session.loggedIn
-	const userId = req.session.userId
-	const logId = req.params.id
-
-	Log.findById(logId)
-		.then((log) => {
-			res.render("logs/edit", { log, username, loggedIn, userId })
-		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
-		})
-})
 
 // update route
-router.put("/:id", (req, res) => {
+router.put("/reviews/:id", requireToken, (req, res, next) => {
 	const logId = req.params.id
-	const logText = req.body.logText
-	req.body.author = req.session.userId
-
-	Log.findById(logId, req.body)
+	// console.log(req.user.id)
+	Log.findById(logId)
 		.then((log) => {
+            requireOwnership(req, log)
 			return log.updateOne(req.body)
 		})
-		.then(() => {
-			res.redirect(`/logs/${logId}`)
+		// .then((log) => {
+		// 	return log.toObject()
+		// })
+		.then((log) => {
+			res.status(204).json({ log: log })
 		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
-		})
+		.catch(next)
 })
 
 // show route
-router.get("/:id", (req, res) => {
+router.get("/reviews/:id", (req, res, next) => {
 	const logId = req.params.id
 
 	Log.findById(logId)
-		.populate("comments.author", "username")
-		.populate("author", "username")
+		.populate("comments.author", "email")
+		.populate("author", "email")
 		.then((log) => {
-			const { username, loggedIn, userId } = req.session
-			console.log(log)
-			res.render("logs/show", { log, username, loggedIn, userId })
+			return log.toObject()
 		})
-		.catch((error) => {
-			res.redirect(`/error?error=${error}`)
+		.then((log) => {
+			res.status(200).json({ log: log })
 		})
+		.catch(next)
 })
 
 // delete route
-router.delete("/:id", (req, res) => {
+router.delete("/reviews/:id", (req, res) => {
 	const logId = req.params.id
 	Log.findByIdAndRemove(logId)
 		.then((log) => {
