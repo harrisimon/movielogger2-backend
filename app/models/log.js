@@ -34,7 +34,7 @@ const LogSchema = new mongoose.Schema({
         required: true
     },
     director: {
-        type:String,
+        type:[String],
         required: true
     },
     plot: {
@@ -42,7 +42,7 @@ const LogSchema = new mongoose.Schema({
         required: false
     },
     genre: {
-        type:String,
+        type:[String],
         required: true
     },
     author: {
@@ -51,8 +51,9 @@ const LogSchema = new mongoose.Schema({
         required: true
     },
     comments: [commentSchema]
-}, {timestamps: true})
+}, {timestamps: true,
+    toObject: { virtuals: true },
+})
 
-// const Log = model('Log', LogSchema)
 
 module.exports = mongoose.model('Log',LogSchema)
