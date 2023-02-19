@@ -23,7 +23,7 @@ router.get("/reviews", (req, res, next) => {
 			return log.map((log) => log.toObject())
 		})
 		.then((log) => {
-			res.status(200).json({ log: log })
+			res.status(200).json({ logs: log })
 		})
 		.catch(next)
 })
@@ -64,7 +64,7 @@ router.put("/reviews/:id", requireToken, (req, res, next) => {
 			return log.updateOne(req.body)
 		})
 		.then((log) => {
-			res.status(204).json({ log: log })
+			res.status(204).json({ log: {log }})
 		})
 		.catch(next)
 })
