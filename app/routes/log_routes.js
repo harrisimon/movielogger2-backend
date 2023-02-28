@@ -49,7 +49,7 @@ router.post("/reviews", requireToken, removeBlanks, (req, res, next) => {
 	Log.create(req.body.review)
 		.then(handle404)
 		.then((log) => {
-			res.status(201).json({ log: log.toObject() })
+			return res.status(201).json({ log: log.toObject() })
 		})
 		.catch(next)
 })

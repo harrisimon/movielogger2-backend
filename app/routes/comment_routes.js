@@ -30,15 +30,19 @@ router.post("/comments/:id", requireToken, (req, res, next) => {
 router.delete('/comments/:logId/:commId', requireToken, (req, res, next) => {
    
     const {logId, commId} = req.params
+    // console.log("log id, commId", logId, commId)
     Log.findById(logId)
         .then((log)=>{
             const comment = log.comments.id(commId)
-            requireOwnership(req, log)
-            console.log('this is the comment that was found', comment)
+            // requireOwnership(req, log)
+            // console.log('this is the comment that was found', comment)
             comment.remove()
-            return log.save()
+            log.save()
+            
+            return log
         })
-        then((log) => res.sendStatus(204))
+        .then((log) => res.status(204))
+        // .then((log)=>console.log(log))
         .catch(next)
 })
 
