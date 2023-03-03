@@ -37,12 +37,10 @@ router.delete('/comments/:logId/:commId', requireToken, (req, res, next) => {
             // requireOwnership(req, log)
             // console.log('this is the comment that was found', comment)
             comment.remove()
-            log.save()
-            
-            return log
+            return log.save()
+          
         })
         .then((log) => res.status(204))
-        // .then((log)=>console.log(log))
         .catch(next)
 })
 
